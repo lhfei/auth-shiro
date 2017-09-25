@@ -21,6 +21,8 @@ import javax.servlet.ServletResponse;
 
 import org.apache.shiro.SecurityUtils;
 import org.apache.shiro.web.filter.PathMatchingFilter;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.jd.y.auth.serve.common.constant.StandardConstants;
 
@@ -32,12 +34,15 @@ import com.jd.y.auth.serve.common.constant.StandardConstants;
  * @since Sep 23, 2017
  */
 public class CustomUserFilter extends PathMatchingFilter {
+	private static final Logger LOG = LoggerFactory.getLogger(CustomUserFilter.class);
 	@Override
 	protected boolean onPreHandle(ServletRequest request, ServletResponse response, 
 			Object mappedValue) throws Exception {
 		
 		String username = (String) SecurityUtils.getSubject().getPrincipal();
 		request.setAttribute(StandardConstants.CURRENT_USER, username);
+		
+		LOG.info("CustomUser Filter. == User: [{}]", username);
 		
 		return true;
 	}

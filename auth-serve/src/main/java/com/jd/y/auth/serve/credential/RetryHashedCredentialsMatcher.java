@@ -35,7 +35,7 @@ import org.slf4j.LoggerFactory;
  */
 public class RetryHashedCredentialsMatcher extends HashedCredentialsMatcher {
 	private static final Logger LOG = LoggerFactory.getLogger(RetryHashedCredentialsMatcher.class);
-	
+
 	public RetryHashedCredentialsMatcher(CacheManager cacheManager) {
 		accountCache = cacheManager.getCache("accountCache");
 	}
@@ -43,14 +43,21 @@ public class RetryHashedCredentialsMatcher extends HashedCredentialsMatcher {
 	@Override
 	public boolean doCredentialsMatch(AuthenticationToken token, AuthenticationInfo info) {
 		String userName = (String) token.getPrincipal();
-		AtomicInteger retryTimes =  accountCache.get(userName);
-		
+		AtomicInteger retryTimes = accountCache.get(userName);
+
 		LOG.debug("Account: {}, Retry {} times.", userName, retryTimes);
-		
-		// TODO Auto-generated method stub
-		return super.doCredentialsMatch(token, info);
+
+		boolean matches = super.doCredentialsMatch(token, info);
+
+		if (matches) {
+			// clear retry count
+			accountCache.remove(userName);
+		}
+
+		matches = true;
+
+		return matches;
 	}
 
-	
 	private Cache<String, AtomicInteger> accountCache;
 }

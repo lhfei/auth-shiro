@@ -1,0 +1,115 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.jd.y.auth.serve.orm.mapper.SessionHandlerMapper">
+
+	<cache />
+
+	<sql id="DATA_STATUS_ACTIVITY">'0'</sql>
+	<sql id="DATAFUN_DEFAULT_SCHEMA">`authc-server`</sql>
+
+	<sql id="SESSION_ALL_COLUMNS">
+		`PID`,
+		`ID`,
+		`SESSION`,
+		`CREATE_TIME`,
+		`LATEST_TIME`
+	</sql>
+	
+	<sql id="SESSION_ALL_COLUMNS_WITH_ALIAS">
+		`PID`			as  pid,
+		`ID`			as  id,
+		`SESSION`		as  session,
+		`CREATE_TIME`	as  createTime,
+		`LATEST_TIME`	as  latestTime	
+	</sql>
+	
+	<!-- ======== NoteRecord CRUD ======== -->
+	<insert id="createSession" parameterType="session"
+		useGeneratedKeys="true" keyProperty="noteId" keyColumn="id">
+		
+		INSERT INTO <include refid="DATAFUN_DEFAULT_SCHEMA"/>.`authc_session` (
+		  <include refid="SESSION_ALL_COLUMNS"></include>
+		)
+		VALUES
+		  (
+		  	#{pid},
+			#{id},            
+			#{session},
+			#{createTime},      
+			#{latestTime}
+		  );
+	</insert>
+	
+	<update id="updateSession" parameterType="session">
+		UPDATE
+		  <include refid="DATAFUN_DEFAULT_SCHEMA"/>.`authc_session`
+		SET
+		  `SESSION` = #{session},
+		  `LATEST_TIME` = #{latestTime}
+		WHERE `ID` = #{id};
+	</update>
+	
+	<delete id="deleteSession" parameterType="string">
+		DELETE FROM
+		  <include refid="DATAFUN_DEFAULT_SCHEMA" />.`authc_session`
+		WHERE `id` = #{id}
+	</delete>
+	
+	<select id="getSession" parameterType="string" resultType="session">
+		SELECT
+		
+		<include refid="SESSION_ALL_COLUMNS_WITH_ALIAS"></include>
+			
+		FROM <include refid="DATAFUN_DEFAULT_SCHEMA"/>.`authc_session`
+		
+		WHERE `id` = #{id}
+	</select>
+	
+	<select id="getSessions" resultType="session" parameterType="session" >
+		SELECT
+		
+		<include refid="SESSION_ALL_COLUMNS_WITH_ALIAS"></include>
+			
+		FROM <include refid="DATAFUN_DEFAULT_SCHEMA"/>.`authc_session`
+		
+		<trim prefix="WHERE" prefixOverrides="AND |OR ">
+			<if test="id != ''">
+				`ID` = #{id}
+			</if>
+		
+			<if test="createTime != null">
+				AND `CREATE_TIME` &lt;= #{createTime}
+			</if>
+			<if test="latestTime != null">
+				AND `LATEST_TIME` &gt;= #{latestTime}
+			</if> 
+		</trim>
+		
+		ORDER BY LATEST_TIME DESC
+		
+		LIMIT #{start}, #{limit};
+		
+	</select>
+	
+	<select id="countSessions" parameterType="session" resultType="long">
+		SELECT
+
+			COUNT(*)
+			
+		FROM <include refid="DATAFUN_DEFAULT_SCHEMA"/>.`authc_session`
+
+		<trim prefix="WHERE" prefixOverrides="AND |OR ">
+			<if test="id != ''">
+				`ID` = #{id}
+			</if>
+		
+			<if test="createTime != null">
+				AND `CREATE_TIME` &lt;= #{createTime}
+			</if>
+			<if test="latestTime != null">
+				AND `LATEST_TIME` &gt;= #{latestTime}
+			</if> 
+		</trim>
+	</select>	
+	
+</mapper>

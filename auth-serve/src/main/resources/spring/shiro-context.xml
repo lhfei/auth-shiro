@@ -8,17 +8,79 @@
 		http://www.springframework.org/schema/util http://www.springframework.org/schema/util/spring-util-4.3.xsd">
 
 	<aop:config proxy-target-class="true"></aop:config>
+	
     <bean class="org.apache.shiro.spring.security.interceptor.AuthorizationAttributeSourceAdvisor">
         <property name="securityManager" ref="securityManager"/>
     </bean>
+    
+    <!-- Let's use some enterprise caching support for better performance.  You can replace this with any enterprise
+         caching framework implementation that you like (Terracotta+Ehcache, Coherence, GigaSpaces, etc -->
+    <!-- Set a net.sf.ehcache.CacheManager instance here if you already have one.  If not, a new one
+         will be creaed with a default config:
+         <property name="cacheManager" ref="ehCacheManager"/> -->
+    <!-- If you don't have a pre-built net.sf.ehcache.CacheManager instance to inject, but you want
+         a specific Ehcache configuration to be used, specify that here.  If you don't, a default
+         will be used.:
+    <property name="cacheManagerConfigFile" value="classpath:some/path/to/ehcache.xml"/> -->
+    <bean id="cacheManager" class="org.apache.shiro.cache.ehcache.EhCacheManager">
+        <property name="cacheManagerConfigFile" value="classpath:ehcache/ehcache-shiro.xml"/>
+    </bean>
+    
+    <bean id="credentialsMatcher" class="com.jd.y.auth.serve.credential.RetryHashedCredentialsMatcher">
+        <constructor-arg ref="cacheManager"/>
+        <property name="hashAlgorithmName" value="${authc_password_algorithm_name}"/>
+        <property name="hashIterations" value="${authc_password_hashIterations}"/>
+        <property name="storedCredentialsHexEncoded" value="true"/>
+    </bean>
+    
+    <!-- <bean id="credentialsMatcher" class="org.apache.shiro.authc.credential.HashedCredentialsMatcher">
+        <property name="hashAlgorithmName" value="${authc_password_algorithm_name}"/>
+        <property name="hashIterations" value="${authc_password_hashIterations}"/>
+        <property name="storedCredentialsHexEncoded" value="true"/>
+    </bean> -->
+    
+    <!-- Simulated business-tier "Manager", not Shiro related, just an example -->
+    <!-- <bean id="sampleManager" class="org.apache.shiro.samples.spring.DefaultSampleManager"/> -->
 
+    <!-- =========================================================
+         Shiro Core Components - Not Spring Specific
+         ========================================================= -->
+
+    <bean id="sessionManager" class="org.apache.shiro.web.session.mgt.DefaultWebSessionManager">
+        <property name="globalSessionTimeout" value="${authc.session.validate.timespan}"/>
+        <property name="deleteInvalidSessions" value="true"/>
+        <property name="sessionValidationSchedulerEnabled" value="true"/>
+        <property name="sessionValidationScheduler" ref="sessionValidationScheduler"/>
+        <property name="sessionDAO" ref="mySqlCachingSessionMapper"/>
+        <property name="sessionIdCookieEnabled" value="true"/>
+        <property name="sessionIdCookie" ref="sessionIdCookie"/>
+    </bean>
+         
+    <bean id="sessionValidationScheduler" class="org.apache.shiro.session.mgt.ExecutorServiceSessionValidationScheduler">
+	     <property name="interval" value="${authc.session.validate.timespan}"/>
+	     <property name="sessionManager" ref="sessionManager"/>
+	</bean>
+	
+	<!-- Define the realm you want to use to connect to your back-end security datasource: -->
+	<bean id="mySqlRealm" class="com.jd.y.auth.serve.realm.MySqlAuthorizingRealm">
+		<property name="cachingEnabled" value="${authc.realm.caching.enabled}"/>
+		<property name="credentialsMatcher" ref="credentialsMatcher"/>
+	</bean>
+	
+	<bean id="securityManager" class="org.apache.shiro.web.mgt.DefaultWebSecurityManager">
+	    <!-- Single realm app.  If you have multiple realms, use the 'realms' property instead. -->
+	    <property name="realm" ref="mySqlRealm"/>
+	    
+	    <property name="sessionManager" ref="sessionManager" />
+		<property name="rememberMeManager" ref="rememberMeManager" />
+	</bean>
 
 	<bean id="shiroFilter" class="org.apache.shiro.spring.web.ShiroFilterFactoryBean">
 	    <property name="securityManager" ref="securityManager"/>
 	    <property name="loginUrl" value="/login"/>
 	    <property name="successUrl" value="/main"/>
-	    <!-- override these for application-specific URLs if you like:
-	    <property name="unauthorizedUrl" value="/unauthorized.jsp"/> -->
+	    <property name="unauthorizedUrl" value="/unauthorized"/>
+	    <!-- override these for application-specific URLs if you like: -->
 	    <!-- The 'filters' property is not necessary since any declared javax.servlet.Filter bean  -->
 	    <!-- defined will be automatically acquired and available via its beanName in chain        -->
 	    <!-- definitions, but you can perform instance overrides or name aliases here if you like: -->
@@ -63,15 +125,6 @@
     
     <bean id="customerUserFilter" class="com.jd.y.auth.serve.filter.CustomUserFilter"></bean>
 
-	<!-- Define the realm you want to use to connect to your back-end security datasource: -->
-	<bean id="mySqlRealm" class="com.jd.y.auth.serve.realm.MySqlAuthorizingRealm">
-	</bean>
-	
-	<bean id="securityManager" class="org.apache.shiro.web.mgt.DefaultWebSecurityManager">
-	    <!-- Single realm app.  If you have multiple realms, use the 'realms' property instead. -->
-	    <property name="realm" ref="mySqlRealm"/>
-	</bean>
-	
 	<bean id="lifecycleBeanPostProcessor" class="org.apache.shiro.spring.LifecycleBeanPostProcessor"/>
 	
 	<!-- For simplest integration, so that all SecurityUtils.* methods work in all cases, -->
@@ -115,4 +168,52 @@
 			</props>
 		</property>
 	</bean>
+	
+	<!-- ======== Cookie ======== -->
+	<bean id="sessionIdCookie" class="org.apache.shiro.web.servlet.SimpleCookie">
+	    <constructor-arg value="${authc.default.session.id}"/>
+	    <property name="httpOnly" value="true"/>
+	    <property name="maxAge" value="-1"/>
+	    <property name="path" value="/"/>
+	    <property name="domain" value="${authc.default.domain}"/>
+	</bean>    	
+
+	<bean id="userPinCookie" class="org.apache.shiro.web.servlet.SimpleCookie">
+		<constructor-arg value="userPin" />
+		<property name="httpOnly" value="true" />
+		<property name="domain" value="${authc.default.domain}"/>
+		<!-- 30 Days -->
+		<property name="maxAge" value="${authc.cookie.remember_me.maxage}" /> 
+	</bean>
+	
+    <bean id="rememberMeCookie" class="org.apache.shiro.web.servlet.SimpleCookie">
+        <constructor-arg value="rememberMe"/>
+        <property name="httpOnly" value="true"/>
+        <property name="maxAge" value="${authc.cookie.remember_me.maxage}"/>
+        <property name="domain" value=""/>
+        <property name="path" value="/"/>
+    </bean>
+    
+    <bean id="rememberMeManager" class="org.apache.shiro.web.mgt.CookieRememberMeManager">
+        <!-- rememberMe cookie AES(128 256 512) -->
+        <property name="cipherKey"
+                  value="#{T(org.apache.shiro.codec.Base64).decode('b8cefgijk4lnoGAv2V1hm6FL%7Us50KTA3Kpr1sd9ag==')}"/>
+        <property name="cookie" ref="rememberMeCookie"/>
+    </bean>
+    
+    <!-- ======== Session Caching ORM ======== -->
+    
+    <!-- Session ID Generator -->
+	<bean id="sessionIdGenerator" class="org.apache.shiro.session.mgt.eis.JavaUuidSessionIdGenerator"/>
+	
+	<!-- MySQL Session CRUD Handler -->
+    <!-- <bean id="sessionHandlerMapper" class="com.jd.y.auth.serve.orm.mapper.SessionHandlerMapper"></bean> -->
+    
+    <!-- <bean id="mySqlCachingSessionMapper"
+    	class="com.jd.y.auth.serve.session.mysql.MySqlCachingSessionMapper">
+    	<property name="sessionMapper" ref="sessionHandlerMapper"></property>
+    	<property name="activeSessionsCacheName" value="shiro-activeSessionCache"/>
+        <property name="sessionIdGenerator" ref="sessionIdGenerator"/>
+    </bean> -->
+    
 </beans>

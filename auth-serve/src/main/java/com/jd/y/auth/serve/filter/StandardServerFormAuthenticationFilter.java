@@ -21,6 +21,8 @@ import javax.servlet.ServletResponse;
 
 import org.apache.shiro.web.filter.authc.FormAuthenticationFilter;
 import org.apache.shiro.web.util.WebUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.util.StringUtils;
 
 /**
@@ -31,8 +33,10 @@ import org.springframework.util.StringUtils;
  * @since Sep 23, 2017
  */
 public class StandardServerFormAuthenticationFilter extends FormAuthenticationFilter {
+	private static final Logger LOG = LoggerFactory.getLogger(StandardServerFormAuthenticationFilter.class);
 
     protected void issueSuccessRedirect(ServletRequest request, ServletResponse response) throws Exception {
+    	LOG.info("Standard Server Form Authentication Filter.");
         String fallbackUrl = (String) getSubject(request, response)
                 .getSession().getAttribute("authc.fallbackUrl");
         if(StringUtils.isEmpty(fallbackUrl)) {

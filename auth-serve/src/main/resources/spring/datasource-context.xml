@@ -72,7 +72,7 @@
 
 	<!-- scan for mappers and let them be autowired -->
 	<bean class="org.mybatis.spring.mapper.MapperScannerConfigurer">
-		<property name="basePackage" value="com.jcloud.xdata.authc.orm.mapper" />
+		<property name="basePackage" value="com.jd.y.auth.serve.orm.mapper" />
 		<property name="sqlSessionFactoryBeanName" value="sqlSessionFactory" />
 	</bean>
     

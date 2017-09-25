@@ -15,7 +15,7 @@
 		<level value="info" />
 	</logger>
 	
-	<logger name="com.jcloud.xdata.authc">
+	<logger name="com.jd.y.auth">
 		<level value="info" />
 	</logger>
 	
@@ -34,6 +34,18 @@
 
 	<logger name="org.springframework.web">
 		<level value="info" />
+	</logger>
+	
+	<logger name="org.springframework.web.servlet.mvc.method.annotation">
+		<level value="ERROR"></level>
+	</logger>
+	
+	<logger name="com.mchange">
+		<level value="info"></level>
+	</logger>
+	
+	<logger name="org.thymeleaf">
+		<level value="info"></level>
 	</logger>
 
 	<!-- Root Logger -->

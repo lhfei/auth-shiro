@@ -74,8 +74,8 @@ public class MySqlAuthorizingRealm extends JdbcRealm {
 	
 	private AuthUser getUser(String userName) {
 		AuthUser user = new AuthUser();
-		user.setUsername("lhfei");
-		user.setPassword("Lhfei");
+		user.setUsername("admin");
+		user.setPassword("123456");
 		user.setLocked(false);
 		
 		return user;

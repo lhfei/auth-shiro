@@ -1,0 +1,118 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xmlns:aop="http://www.springframework.org/schema/aop"
+	xmlns:util="http://www.springframework.org/schema/util"
+	xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd
+		http://www.springframework.org/schema/aop http://www.springframework.org/schema/aop/spring-aop-4.3.xsd
+		http://www.springframework.org/schema/util http://www.springframework.org/schema/util/spring-util-4.3.xsd">
+
+	<aop:config proxy-target-class="true"></aop:config>
+    <bean class="org.apache.shiro.spring.security.interceptor.AuthorizationAttributeSourceAdvisor">
+        <property name="securityManager" ref="securityManager"/>
+    </bean>
+
+
+	<bean id="shiroFilter" class="org.apache.shiro.spring.web.ShiroFilterFactoryBean">
+	    <property name="securityManager" ref="securityManager"/>
+	    <property name="loginUrl" value="/login"/>
+	    <property name="successUrl" value="/main"/>
+	    <!-- override these for application-specific URLs if you like:
+	    <property name="unauthorizedUrl" value="/unauthorized.jsp"/> -->
+	    <!-- The 'filters' property is not necessary since any declared javax.servlet.Filter bean  -->
+	    <!-- defined will be automatically acquired and available via its beanName in chain        -->
+	    <!-- definitions, but you can perform instance overrides or name aliases here if you like: -->
+	    <property name="filters">
+            <util:map>
+                <entry key="authc" value-ref="formAuthenticationFilter"/>
+            	<entry key="sysUser" value-ref="customerUserFilter"/>
+            </util:map>
+        </property>
+	    <property name="filterChainDefinitions">
+	        <value>
+	            # some example chain definitions:
+	            /admin/** = authc, roles[admin]
+	            /docs/** = authc, perms[document:read]
+	            # /** = authc
+	            # more URL-to-FilterChain definitions here
+	            
+	            /favicon.ico = anon
+                /logo.png = anon
+                /resources/** = anon
+                
+                /RemoteAccountService = anon
+                /HttpUserService = anon
+                
+                /login = authc
+                /logout = logout
+                /authenticated = authc
+                /** = user,sysUser
+	        </value>
+	    </property>
+	</bean>
+	
+	<!-- Define any javax.servlet.Filter beans you want anywhere in this application context.   -->
+	<!-- They will automatically be acquired by the 'shiroFilter' bean above and made available -->
+	<!-- to the 'filterChainDefinitions' property.  Or you can manually/explicitly add them     -->
+	<!-- to the shiroFilter's 'filters' Map if desired. See its JavaDoc for more details.       -->
+	<bean id="formAuthenticationFilter" class="com.jd.y.auth.serve.filter.StandardServerFormAuthenticationFilter">
+        <property name="usernameParam" value="username"/>
+        <property name="passwordParam" value="password"/>
+        <property name="rememberMeParam" value="rememberMe"/>
+    </bean>
+    
+    <bean id="customerUserFilter" class="com.jd.y.auth.serve.filter.CustomUserFilter"></bean>
+
+	<!-- Define the realm you want to use to connect to your back-end security datasource: -->
+	<bean id="mySqlRealm" class="com.jd.y.auth.serve.realm.MySqlAuthorizingRealm">
+	</bean>
+	
+	<bean id="securityManager" class="org.apache.shiro.web.mgt.DefaultWebSecurityManager">
+	    <!-- Single realm app.  If you have multiple realms, use the 'realms' property instead. -->
+	    <property name="realm" ref="mySqlRealm"/>
+	</bean>
+	
+	<bean id="lifecycleBeanPostProcessor" class="org.apache.shiro.spring.LifecycleBeanPostProcessor"/>
+	
+	<!-- For simplest integration, so that all SecurityUtils.* methods work in all cases, -->
+	<!-- make the securityManager bean a static singleton.  DO NOT do this in web         -->
+	<!-- applications - see the 'Web Applications' section below instead.                 -->
+	<bean class="org.springframework.beans.factory.config.MethodInvokingFactoryBean">
+	    <property name="staticMethod" value="org.apache.shiro.SecurityUtils.setSecurityManager"/>
+	    <property name="arguments" ref="securityManager"/>
+	</bean>
+	
+	<!-- Enable Shiro Annotations for Spring-configured beans.  Only run after -->
+	<!-- the lifecycleBeanProcessor has run: -->
+	<bean class="org.springframework.aop.framework.autoproxy.DefaultAdvisorAutoProxyCreator" depends-on="lifecycleBeanPostProcessor"/>
+	    <bean class="org.apache.shiro.spring.security.interceptor.AuthorizationAttributeSourceAdvisor">
+	    <property name="securityManager" ref="securityManager"/>
+	</bean>
+	
+	<!-- Secure Spring remoting:  Ensure any Spring Remoting method invocations -->
+	<!-- can be associated with a Subject for security checks. -->
+	<bean id="secureRemoteInvocationExecutor" class="org.apache.shiro.spring.remoting.SecureRemoteInvocationExecutor">
+	    <property name="securityManager" ref="securityManager"/>
+	</bean>
+	
+	<bean name="accountServiceExporter" class="org.springframework.remoting.httpinvoker.HttpInvokerServiceExporter">
+	    <property name="service" ref="remoteAccountService"/>
+	    <property name="serviceInterface" value="com.jd.y.auth.core.remote.AuthenticationServiceInterface"/>
+	    <property name="remoteInvocationExecutor" ref="secureRemoteInvocationExecutor"/>
+	</bean>
+	
+	<bean id="secureRemoteInvocationFactory" class="org.apache.shiro.spring.remoting.SecureRemoteInvocationFactory"/>
+	
+	<!-- Client Remote Service --> 
+	<bean id="remoteAccountService" class="com.jd.y.auth.serve.remote.AuthenticationServiceHandler">
+    </bean>
+	
+	<!-- Mapping configurations from URLs to request handler beans -->
+	<bean id="urlMapping" class="org.springframework.web.servlet.handler.SimpleUrlHandlerMapping">
+		<property name="mappings">
+			<props>
+				<prop key="/RemoteAccountService">accountServiceExporter</prop>
+			</props>
+		</property>
+	</bean>
+</beans>

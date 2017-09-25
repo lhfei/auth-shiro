@@ -1,0 +1,143 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.jcloud.xdata.authc.orm.mapper.UserMapper">
+
+	<cache />
+
+	<sql id="DATA_STATUS_ACTIVITY">'0'</sql>
+	<sql id="DATAFUN_DEFAULT_SCHEMA">`shiro-sso`</sql>
+
+	<sql id="USER_ALL_COLUMNS">
+		`id`,
+		`organization_id`,
+		`username`,
+		`password`,
+		`salt`,
+		`locked`
+	</sql>
+	
+	<sql id="USER_ALL_COLUMNS_WITH_ALIAS">
+		`id`,				as id, 
+		`organization_id`,	as organizationId, 
+		`username`,			as username, 
+		`password`,			as password, 
+		`salt`,				as salt, 
+		`locked`			as locked		
+	</sql>
+	
+	<!-- ======== NoteRecord CRUD ======== -->
+	<insert id="createUser" parameterType="user"
+		useGeneratedKeys="true" keyProperty="noteId" keyColumn="id">
+		
+		INSERT INTO <include refid="DATAFUN_DEFAULT_SCHEMA"/>.`sys_user` (
+		  <include refid="USER_ALL_COLUMNS"></include>
+		)
+		VALUES
+		  (
+			${id},            
+			${organizationId},
+			${username},      
+			${password},      
+			${salt},          
+			${locked} 
+		  );
+	</insert>
+	
+	<update id="updateUser" parameterType="user">
+		UPDATE
+		  <include refid="DATAFUN_DEFAULT_SCHEMA"/>.`sys_user`
+		SET
+		  `organization_id` = #{organizationId},
+		  `username` = #{username},
+		  `password` = #{password},
+		  `salt` = #{salt},
+		  `locked` = #{locked}
+		WHERE `ID` = #{id};
+	</update>
+	
+	<delete id="deleteUser" parameterType="long">
+		DELETE FROM
+		  <include refid="DATAFUN_DEFAULT_SCHEMA" />.`sys_user`
+		WHERE `id` = #{id}
+	</delete>
+	
+	<select id="findOne" parameterType="long" resultType="user">
+		SELECT
+		
+		<include refid="USER_ALL_COLUMNS_WITH_ALIAS"></include>
+			
+		FROM <include refid="DATAFUN_DEFAULT_SCHEMA"/>.`sys_user`
+		
+		WHERE `id` = #{id}
+	</select>
+	
+	<select id="findAll" resultType="user">
+		SELECT
+		
+		<include refid="USER_ALL_COLUMNS_WITH_ALIAS"></include>
+			
+		FROM <include refid="DATAFUN_DEFAULT_SCHEMA"/>.`sys_user`
+		
+	</select>
+	
+	<select id="findByUsername" parameterType="string" resultType="user">
+		SELECT
+		
+		<include refid="USER_ALL_COLUMNS_WITH_ALIAS"></include>
+			
+		FROM <include refid="DATAFUN_DEFAULT_SCHEMA"/>.`sys_user`
+		
+		WHERE `username` = #{username}
+	</select>			
+
+	<select id="getUsers" parameterType="user" resultType="user">
+		SELECT
+
+		<include refid="USER_ALL_COLUMNS_WITH_ALIAS"></include>
+			
+		FROM <include refid="DATAFUN_DEFAULT_SCHEMA"/>.`sys_user`
+
+		<trim prefix="WHERE" prefixOverrides="AND | OR">
+			<if test="id != null">
+				`id` = #{id}
+			</if>								
+			<if test="username != null and username != ''">
+				<bind name="pattern_name" value="'%' + _parameter.getName() + '%'" />
+				AND `username` like #{pattern_name}
+			</if>
+			<if test="organizationId != null">
+				AND `organization_id` = #{organizationId}
+			</if>
+			<if test="locked != null">
+				AND `locked` = #{locked}
+			</if>			
+		</trim>
+		LIMIT #{start}, #{limit};
+	</select>
+	
+	<select id="countUsers" parameterType="user" resultType="int">
+		SELECT
+
+			COUNT(*)
+			
+		FROM <include refid="DATAFUN_DEFAULT_SCHEMA"/>.`sys_user`
+
+		<trim prefix="WHERE" prefixOverrides="AND | OR">
+			<if test="id != null">
+				`id` = #{id}
+			</if>								
+			<if test="username != null and username != ''">
+				<bind name="pattern_name" value="'%' + _parameter.getName() + '%'" />
+				AND `username` like #{pattern_name}
+			</if>
+			<if test="organizationId != null">
+				AND `organization_id` = #{organizationId}
+			</if>
+			<if test="locked != null">
+				AND `locked` = #{locked}
+			</if>
+		</trim>
+	</select>	
+
+	
+</mapper>

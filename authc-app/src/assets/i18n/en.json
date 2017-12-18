@@ -1,0 +1,17 @@
+{
+    "system": {
+    	"profile": "Profile",
+    	"settings": "Settings",
+		"logout": "Logout"
+	},
+    "title": "YSC-OPEN",
+    "dashboard": "Dashboard",
+    "charts": "Charts",
+    "tables": "Tables",
+    "dataTables": "DataTable",
+    "tabs": "TabPanel",
+    "forms": "Forms",
+    "component": "Component",
+
+    "language": "Language"
+}

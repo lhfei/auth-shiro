@@ -1,0 +1,16 @@
+{
+	"system": {
+		"profile": "资料",
+    	"settings": "设置",
+		"logout": "退出"
+	},
+    "title": "智慧供应链",
+    "dashboard": "控制面板",
+    "charts": "图表",
+    "tables": "表格",
+    "forms": "表单",
+    "dataTables": "DataTable",
+    "tabs": "页签",
+    "component": "组建",
+    "language": "语言"
+}

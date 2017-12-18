@@ -74,18 +74,30 @@
 		<artifactId>javax.servlet-api</artifactId>
 		<version>${servlet.version}</version>
 	</dependency>
-	<dependency>
-		<groupId>com.jd.y</groupId>
-		<artifactId>authc-core</artifactId>
-		<version>${project.parent.version}</version>
-	</dependency>
 	
 	<dependency>
 	    <groupId>org.thymeleaf</groupId>
 	    <artifactId>thymeleaf-spring4</artifactId>
 	    <version>${thymeleaf.version}</version>
+	    <exclusions>
+			<exclusion>
+				<groupId>org.slf4j</groupId>
+				<artifactId>slf4j-api</artifactId>
+			</exclusion>
+		</exclusions>
 	</dependency>
-	
+
+	<dependency>
+		<groupId>com.jd.y</groupId>
+		<artifactId>authc-core</artifactId>
+		<version>${project.parent.version}</version>
+	</dependency>
+	<dependency>
+		<groupId>com.jd.y</groupId>
+		<artifactId>authc-app</artifactId>
+		<version>${project.parent.version}</version>
+		<type>war</type>
+	</dependency>
   </dependencies>
   <build>
     <finalName>authc-serve</finalName>
@@ -99,6 +111,51 @@
 				<webApp>
 					<contextPath>/</contextPath>
 				</webApp>
+			</configuration>
+		</plugin>
+		<plugin>
+			<groupId>org.apache.maven.plugins</groupId>
+			<artifactId>maven-war-plugin</artifactId>
+			<version>3.1.0</version>
+			<configuration>
+				<failOnMissingWebXml>false</failOnMissingWebXml>
+				<!-- <dependentWarExcludes>WEB-INF/lib/*, WEB-INF/classes/*</dependentWarExcludes>
+				<dependentWarIncludes>*.js, *.map, WEB-INF/views/*</dependentWarIncludes> -->
+				<overlays>
+					<!-- <overlay>
+						<groupId>com.jd.y</groupId>
+						<artifactId>authc-app</artifactId>
+						<excludes>
+							 <exclude>META-INF</exclude>
+							 <exclude>*/web.xml</exclude>
+							 <exclude>WEB-INF/lib/*</exclude>
+						</excludes>
+						<includes>
+							<include>*.html</include>
+						</includes>
+						<type>war</type>
+						<targetPath>WEB-INF/views/</targetPath>
+					</overlay> -->
+					
+					<overlay>
+						<groupId>com.jd.y</groupId>
+						<artifactId>authc-app</artifactId>
+						<excludes>
+							 <exclude>META-INF</exclude>
+							 <exclude>*/web.xml</exclude>
+							 <exclude>WEB-INF/lib/*</exclude>
+						</excludes>
+						<!-- <includes>
+							<include>*.js</include>
+							<include>*.map</include>
+							<include>*.html</include>
+							<include>assets/</include>
+						</includes> -->
+						<type>war</type>
+						<!-- <targetPath>/resources/</targetPath> -->
+						<targetPath>WEB-INF/views/</targetPath>
+					</overlay>
+				</overlays>
 			</configuration>
 		</plugin>
 	</plugins>

@@ -85,7 +85,7 @@
 
 	<bean id="shiroFilter" class="org.apache.shiro.spring.web.ShiroFilterFactoryBean">
 	    <property name="securityManager" ref="securityManager"/>
-	    <property name="loginUrl" value="/login"/>
+	    <property name="loginUrl" value="${authc.login.url}"/>
 	    <!-- <property name="successUrl" value="/main"/> -->
 	    <property name="unauthorizedUrl" value="/forward/unauthorized"/>
 	    <!-- override these for application-specific URLs if you like: -->
@@ -109,6 +109,8 @@
 	            /favicon.ico = anon
                 /logo.png = anon
                 /resources/** = anon
+                /*.js = anon
+                /*.map = anon
                 
                 /RemoteAccountService = anon
                 /HttpUserService = anon

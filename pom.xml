@@ -106,5 +106,6 @@
 		<module>authc-client</module>
 		<module>authc-core</module>
 		<module>authc-serve</module>
+		<module>authc-app</module>
 	</modules>
 </project>

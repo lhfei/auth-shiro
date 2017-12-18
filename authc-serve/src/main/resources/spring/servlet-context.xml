@@ -12,12 +12,27 @@
 	<!-- Enables the Spring MVC @Controller programming model -->
 	<mvc:annotation-driven />
 
-	<mvc:view-controller path="/" view-name="main" />
+
+	<mvc:view-controller path="/" view-name="index" />
 
 	<context:component-scan base-package="com.jd.y.auth" />
 	
 	<!-- Handles HTTP GET requests for /resources/** by efficiently serving up static resources in the ${webappRoot}/resources directory -->
 	<mvc:resources mapping="/resources/**" location="/resources/" />
+	<mvc:resources mapping="/*.js" location="/WEB-INF/views/"></mvc:resources>
+	<mvc:resources mapping="/*.map" location="/WEB-INF/views/"></mvc:resources>
+	<mvc:resources mapping="/login.module.chunk.js" location="/WEB-INF/views/"></mvc:resources>
+	
+	
+	<mvc:resources mapping="/*.eot" location="/WEB-INF/views/"></mvc:resources>
+	<mvc:resources mapping="/*.svg" location="/WEB-INF/views/"></mvc:resources>
+	<mvc:resources mapping="/*.woff2" location="/WEB-INF/views/"></mvc:resources>
+	<mvc:resources mapping="/*.ttf" location="/WEB-INF/views/"></mvc:resources>
+	<mvc:resources mapping="/*.woff" location="/WEB-INF/views/"></mvc:resources>
+	
+	
+	<mvc:resources mapping="/assets/**" location="/WEB-INF/views/assets/"></mvc:resources>
+	
 
 	<!-- Resolves views selected for rendering by @Controllers to .jsp resources in the /WEB-INF/views directory -->
 	<!-- <bean class="org.springframework.web.servlet.view.InternalResourceViewResolver">
